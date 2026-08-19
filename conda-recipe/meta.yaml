@@ -1,0 +1,37 @@
+package:
+  name: q2-core
+  version: {{ PLUGIN_VERSION }}
+source:
+  path: ..
+build:
+  script: make install
+requirements:
+  host:
+  - python {{ python }}
+  - pip
+  - setuptools
+  - versioningit
+  - wheel
+  build:
+  - python {{ python }}
+  - pip
+  - setuptools
+  - versioningit
+  run:
+  - python {{ python }}
+  - pandas
+  - numpy
+  - qiime2 >={{ qiime2 }}
+  - q2-types >={{ q2_types }}
+test:
+  requires:
+  - pytest
+  imports:
+  - q2_core
+  - qiime2.plugins.core
+  commands:
+  - py.test --pyargs q2_core
+about:
+  home: https://github.com/bokulich-lab/q2-core
+  license: BSD-3-Clause
+  license_family: BSD

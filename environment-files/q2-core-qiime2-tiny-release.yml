@@ -1,0 +1,9 @@
+channels:
+- https://packages.qiime2.org/qiime2/stable/tiny/released
+- conda-forge
+- bioconda
+dependencies:
+  - qiime2-tiny
+  - pip
+  - pip:
+     - q2-core@git+https://github.com/bokulich-lab/q2-core.git@main
