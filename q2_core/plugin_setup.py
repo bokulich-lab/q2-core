@@ -49,7 +49,11 @@ plugin.methods.register_function(
             "scaling denominator offset."
         ),
     },
-    output_descriptions={"core_scores": "Core scores for each feature."},
+    output_descriptions={
+        "core_scores": (
+            "Prevalence, mean abundance, and core score values for each " "feature."
+        )
+    },
     name="Compute core score for features",
     description=(
         "Compute a prevalence-abundance core score for each feature "

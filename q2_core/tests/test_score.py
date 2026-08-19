@@ -38,10 +38,12 @@ class TestScore(TestCase):
         log_mean = np.log10(mean_abundance + 1e-6)
         expected = pd.DataFrame(
             {
+                "prevalence": prevalence,
+                "mean_abundance": mean_abundance,
                 "core_score": (
                     _minmax_scale(prevalence, offset=1e-6)
                     * _minmax_scale(log_mean, offset=1e-6)
-                )
+                ),
             },
             index=pd.Index(["O1", "O2", "O3"], name="id"),
         )
@@ -60,10 +62,12 @@ class TestScore(TestCase):
         log_mean = np.log10(mean_abundance + 1e-3)
         expected = pd.DataFrame(
             {
+                "prevalence": prevalence,
+                "mean_abundance": mean_abundance,
                 "core_score": (
                     _minmax_scale(prevalence, offset=1e-3)
                     * _minmax_scale(log_mean, offset=1e-3)
-                )
+                ),
             },
             index=pd.Index(["O1", "O2", "O3"], name="id"),
         )
@@ -80,10 +84,12 @@ class TestScore(TestCase):
         log_mean = np.log10(mean_abundance + 1e-6)
         expected = pd.DataFrame(
             {
+                "prevalence": prevalence,
+                "mean_abundance": mean_abundance,
                 "core_score": (
                     _minmax_scale(prevalence, offset=1e-6)
                     * _minmax_scale(log_mean, offset=1e-6)
-                )
+                ),
             },
             index=pd.Index(["O1", "O2", "O3"], name="id"),
         )
