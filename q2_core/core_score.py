@@ -1,0 +1,68 @@
+# ----------------------------------------------------------------------------
+# Copyright (c) 2026, Bokulich Laboratories.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# ----------------------------------------------------------------------------
+
+import numpy as np
+import pandas as pd
+
+
+def score(
+    table: pd.DataFrame,
+    min_rel_abundance: float = 1e-3,
+    mean_abundance_on_presence: bool = False,
+    offset: float = 1e-6,
+) -> pd.DataFrame:
+    """Compute prevalence-abundance core scores for feature table columns.
+
+    Computes feature prevalence and mean relative abundance across samples,
+    scales both quantities to the range [0, 1], and multiplies them to
+    produce a core score for each feature.
+
+    Args:
+        table (pd.DataFrame): Relative abundances with samples as rows and
+            features as columns.
+        min_rel_abundance (float): Minimum relative abundance for counting a
+            feature as present in a sample.
+        mean_abundance_on_presence (bool): Whether to compute mean abundance
+            using only samples in which the feature is present.
+        offset (float): Positive value added before log transformation and
+            min-max scaling to prevent division by zero.
+
+    Returns:
+        pd.DataFrame: Core scores indexed by feature ID in a `core_score`
+            column.
+    """
+    prevalence = (table > min_rel_abundance).mean(axis=0)
+    if mean_abundance_on_presence:
+        mean_abundance = table.where(table > min_rel_abundance).mean(axis=0).fillna(0)
+    else:
+        mean_abundance = table.mean(axis=0)
+    log_mean = np.log10(mean_abundance + offset)
+
+    prevalence_scaled = _minmax_scale(prevalence, offset)
+    log_mean_scaled = _minmax_scale(log_mean, offset)
+    scores = prevalence_scaled * log_mean_scaled
+
+    result = pd.DataFrame({"core_score": scores})
+    result.index.name = "id"
+    return result
+
+
+def _minmax_scale(x: pd.Series, offset: float) -> pd.Series:
+    """Scale values to the range [0, 1] with an offset denominator.
+
+    Subtracts the minimum value and divides by the observed range plus a
+    positive offset, yielding finite values when all input values are equal.
+
+    Args:
+        x (pd.Series): Values to scale.
+        offset (float): Positive value added to the range denominator.
+
+    Returns:
+        pd.Series: The values scaled to the range [0, 1].
+    """
+    return (x - x.min()) / (x.max() - x.min() + offset)
