@@ -33,8 +33,8 @@ def score(
             min-max scaling to prevent division by zero.
 
     Returns:
-        pd.DataFrame: Prevalence, mean abundance, and core score values
-            indexed by feature ID.
+        pd.DataFrame: Prevalence, mean abundance, log mean abundance, and
+            core score values indexed by feature ID.
     """
     prevalence = (table > min_rel_abundance).mean(axis=0)
     if mean_abundance_on_presence:
@@ -51,6 +51,7 @@ def score(
         {
             "prevalence": prevalence,
             "mean_abundance": mean_abundance,
+            "log_mean_abundance": log_mean,
             "core_score": scores,
         }
     )

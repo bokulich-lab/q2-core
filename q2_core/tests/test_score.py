@@ -40,6 +40,7 @@ class TestScore(TestCase):
             {
                 "prevalence": prevalence,
                 "mean_abundance": mean_abundance,
+                "log_mean_abundance": log_mean,
                 "core_score": (
                     _minmax_scale(prevalence, offset=1e-6)
                     * _minmax_scale(log_mean, offset=1e-6)
@@ -64,6 +65,7 @@ class TestScore(TestCase):
             {
                 "prevalence": prevalence,
                 "mean_abundance": mean_abundance,
+                "log_mean_abundance": log_mean,
                 "core_score": (
                     _minmax_scale(prevalence, offset=1e-3)
                     * _minmax_scale(log_mean, offset=1e-3)
@@ -86,6 +88,7 @@ class TestScore(TestCase):
             {
                 "prevalence": prevalence,
                 "mean_abundance": mean_abundance,
+                "log_mean_abundance": log_mean,
                 "core_score": (
                     _minmax_scale(prevalence, offset=1e-6)
                     * _minmax_scale(log_mean, offset=1e-6)
