@@ -39,8 +39,10 @@ class TestScore(TestCase):
         expected = pd.DataFrame(
             {
                 "prevalence": prevalence,
+                "prevalence_scaled": _minmax_scale(prevalence, offset=1e-6),
                 "mean_abundance": mean_abundance,
                 "log_mean_abundance": log_mean,
+                "log_mean_abundance_scaled": _minmax_scale(log_mean, offset=1e-6),
                 "core_score": (
                     _minmax_scale(prevalence, offset=1e-6)
                     * _minmax_scale(log_mean, offset=1e-6)
@@ -64,8 +66,10 @@ class TestScore(TestCase):
         expected = pd.DataFrame(
             {
                 "prevalence": prevalence,
+                "prevalence_scaled": _minmax_scale(prevalence, offset=1e-3),
                 "mean_abundance": mean_abundance,
                 "log_mean_abundance": log_mean,
+                "log_mean_abundance_scaled": _minmax_scale(log_mean, offset=1e-3),
                 "core_score": (
                     _minmax_scale(prevalence, offset=1e-3)
                     * _minmax_scale(log_mean, offset=1e-3)
@@ -87,8 +91,10 @@ class TestScore(TestCase):
         expected = pd.DataFrame(
             {
                 "prevalence": prevalence,
+                "prevalence_scaled": _minmax_scale(prevalence, offset=1e-6),
                 "mean_abundance": mean_abundance,
                 "log_mean_abundance": log_mean,
+                "log_mean_abundance_scaled": _minmax_scale(log_mean, offset=1e-6),
                 "core_score": (
                     _minmax_scale(prevalence, offset=1e-6)
                     * _minmax_scale(log_mean, offset=1e-6)

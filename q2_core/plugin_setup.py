@@ -51,8 +51,8 @@ plugin.methods.register_function(
     },
     output_descriptions={
         "core_scores": (
-            "Prevalence, mean abundance, log mean abundance, and core score "
-            "values for each feature."
+            "Prevalence, mean abundance, log mean abundance, scaled prevalence, "
+            "scaled log mean abundance, and core score values for each feature."
         )
     },
     name="Compute core score for features",
