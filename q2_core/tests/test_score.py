@@ -21,13 +21,11 @@ class TestScore(TestPluginBase):
     def setUp(self):
         super().setUp()
         self.table = pd.DataFrame(
-            np.array(
-                [
-                    [0.0, 0.005, 0.0],
-                    [0.02, 0.005, 0.0],
-                    [0.04, 0.005, 0.3],
-                ]
-            ),
+            [
+                [0.001, 0.099, 0.90],
+                [0.02, 0.08, 0.90],
+                [0.03, 0.07, 0.90],
+            ],
             index=["S1", "S2", "S3"],
             columns=["O1", "O2", "O3"],
         )
@@ -35,78 +33,73 @@ class TestScore(TestPluginBase):
     def test_score(self):
         observed = score(self.table)
 
-        prevalence = np.array([2 / 3, 1, 1 / 3])
-        mean_abundance = np.array([0.06 / 3, 0.005, 0.1])
-        log_mean = np.log10(mean_abundance + 1e-6)
+        index = pd.Index(["O1", "O2", "O3"], name="id")
         expected = pd.DataFrame(
             {
-                "prevalence": prevalence,
-                "prevalence_scaled": _minmax_scale(prevalence, offset=1e-6),
-                "mean_abundance": mean_abundance,
-                "log_mean_abundance": log_mean,
-                "log_mean_abundance_scaled": _minmax_scale(log_mean, offset=1e-6),
-                "core_score": (
-                    _minmax_scale(prevalence, offset=1e-6)
-                    * _minmax_scale(log_mean, offset=1e-6)
+                "prevalence": (self.table > 1e-3).mean(axis=0),
+                "prevalence_scaled": [0.0, 1.0, 1.0],
+                "mean_abundance": self.table.mean(axis=0),
+                "log_mean_abundance": np.log10(self.table.mean(axis=0) + 1e-6),
+                "log_mean_abundance_scaled": [0.0, 0.3994787279202171, 1.0],
+                "core_score": np.multiply(
+                    [0.0, 1.0, 1.0], [0.0, 0.3994787279202171, 1.0]
                 ),
             },
-            index=pd.Index(["O1", "O2", "O3"], name="id"),
+            index=index,
         )
 
         pdt.assert_frame_equal(observed, expected)
 
-    def test_score_values_are_finite(self):
-        observed = score(self.table)
-        self.assertTrue(np.isfinite(observed.to_numpy()).all())
-
     def test_score_custom_parameters(self):
         observed = score(self.table, min_rel_abundance=0.01, offset=1e-3)
 
-        prevalence = np.array([2 / 3, 0, 1 / 3])
-        mean_abundance = np.array([0.06 / 3, 0.005, 0.1])
-        log_mean = np.log10(mean_abundance + 1e-3)
+        index = pd.Index(["O1", "O2", "O3"], name="id")
         expected = pd.DataFrame(
             {
-                "prevalence": prevalence,
-                "prevalence_scaled": _minmax_scale(prevalence, offset=1e-3),
-                "mean_abundance": mean_abundance,
-                "log_mean_abundance": log_mean,
-                "log_mean_abundance_scaled": _minmax_scale(log_mean, offset=1e-3),
-                "core_score": (
-                    _minmax_scale(prevalence, offset=1e-3)
-                    * _minmax_scale(log_mean, offset=1e-3)
+                "prevalence": (self.table > 0.01).mean(axis=0),
+                "prevalence_scaled": [0.0, 1.0, 1.0],
+                "mean_abundance": self.table.mean(axis=0),
+                "log_mean_abundance": np.log10(self.table.mean(axis=0) + 1e-3),
+                "log_mean_abundance_scaled": [0.0, 0.3936602318986702, 1.0],
+                "core_score": np.multiply(
+                    [0.0, 1.0, 1.0], [0.0, 0.3936602318986702, 1.0]
                 ),
             },
-            index=pd.Index(["O1", "O2", "O3"], name="id"),
+            index=index,
         )
 
         pdt.assert_frame_equal(observed, expected)
 
     def test_score_mean_abundance_on_presence(self):
         observed = score(
-            self.table, min_rel_abundance=0.01, mean_abundance_on_presence=True
+            self.table,
+            min_rel_abundance=0.01,
+            mean_abundance_on_presence=True,
         )
 
-        prevalence = np.array([2 / 3, 0, 1 / 3])
-        mean_abundance = np.array([0.03, 0, 0.3])
-        log_mean = np.log10(mean_abundance + 1e-6)
+        index = pd.Index(["O1", "O2", "O3"], name="id")
         expected = pd.DataFrame(
             {
-                "prevalence": prevalence,
-                "prevalence_scaled": _minmax_scale(prevalence, offset=1e-6),
-                "mean_abundance": mean_abundance,
-                "log_mean_abundance": log_mean,
-                "log_mean_abundance_scaled": _minmax_scale(log_mean, offset=1e-6),
-                "core_score": (
-                    _minmax_scale(prevalence, offset=1e-6)
-                    * _minmax_scale(log_mean, offset=1e-6)
+                "prevalence": (self.table > 0.01).mean(axis=0),
+                "prevalence_scaled": [0.0, 1.0, 1.0],
+                "mean_abundance": self.table.where(self.table > 0.01).mean(axis=0),
+                "log_mean_abundance": np.log10(
+                    self.table.where(self.table > 0.01).mean(axis=0) + 1e-6
+                ),
+                "log_mean_abundance_scaled": [0.0, 0.3348523823164069, 1.0],
+                "core_score": np.multiply(
+                    [0.0, 1.0, 1.0], [0.0, 0.3348523823164069, 1.0]
                 ),
             },
-            index=pd.Index(["O1", "O2", "O3"], name="id"),
+            index=index,
         )
 
         pdt.assert_frame_equal(observed, expected)
 
-    def test_minmax_scale(self):
-        observed = _minmax_scale(pd.Series([2, 2, 2]), offset=1e-6)
-        self.assertTrue(np.isfinite(observed.to_numpy()).all())
+    def test_minmax_scale_values(self):
+        observed = _minmax_scale(pd.Series([2.0, 4.0, 6.0]))
+        pdt.assert_series_equal(observed, pd.Series([0.0, 0.5, 1.0]))
+
+    def test_minmax_scale_zero_range(self):
+        observed = _minmax_scale(pd.Series([2, 2, 2]))
+        pdt.assert_series_equal(observed, pd.Series([0.0, 0.0, 0.0]))

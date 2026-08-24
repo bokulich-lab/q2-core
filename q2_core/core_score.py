@@ -29,8 +29,8 @@ def score(
             feature as present in a sample.
         mean_abundance_on_presence (bool): Whether to compute mean abundance
             using only samples in which the feature is present.
-        offset (float): Positive value added before log transformation and
-            min-max scaling to prevent division by zero.
+        offset (float): Positive value added before log transformation to
+            prevent taking the logarithm of zero.
 
     Returns:
         pd.DataFrame: Prevalence, mean abundance, log mean abundance, their
@@ -43,8 +43,8 @@ def score(
         mean_abundance = table.mean(axis=0)
     log_mean = np.log10(mean_abundance + offset)
 
-    prevalence_scaled = _minmax_scale(prevalence, offset)
-    log_mean_scaled = _minmax_scale(log_mean, offset)
+    prevalence_scaled = _minmax_scale(prevalence)
+    log_mean_scaled = _minmax_scale(log_mean)
     scores = prevalence_scaled * log_mean_scaled
 
     result = pd.DataFrame(
@@ -61,17 +61,9 @@ def score(
     return result
 
 
-def _minmax_scale(x: pd.Series, offset: float) -> pd.Series:
-    """Scale values to the range [0, 1] with an offset denominator.
-
-    Subtracts the minimum value and divides by the observed range plus a
-    positive offset, yielding finite values when all input values are equal.
-
-    Args:
-        x (pd.Series): Values to scale.
-        offset (float): Positive value added to the range denominator.
-
-    Returns:
-        pd.Series: The values scaled to the range [0, 1].
-    """
-    return (x - x.min()) / (x.max() - x.min() + offset)
+def _minmax_scale(x: pd.Series) -> pd.Series:
+    """Scale values to the range [0, 1]"""
+    data_range = x.max() - x.min()
+    if data_range == 0:
+        return pd.Series(0.0, index=x.index)
+    return (x - x.min()) / data_range

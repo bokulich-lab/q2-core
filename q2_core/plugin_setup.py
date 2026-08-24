@@ -37,18 +37,15 @@ plugin.methods.register_function(
     input_descriptions={"table": "The relative-frequency feature table to score."},
     parameter_descriptions={
         "min_rel_abundance": (
-            "Minimum relative abundance used to count a feature as present in a "
-            "sample."
+            "Relative-abundance threshold above which a feature is considered present "
+            "in a sample."
         ),
         "mean_abundance_on_presence": (
-            "If true, compute mean relative abundance using only samples where "
-            "the feature is greater than `min_rel_abundance`. If false, compute "
-            "mean relative abundance across all samples."
+            "If true, compute mean relative abundance using only samples in which the "
+            "feature exceeds 'min_rel_abundance'. If false, compute mean relative "
+            "abundance across all samples."
         ),
-        "offset": (
-            "Small positive value used as the log offset and min-max scaling "
-            "denominator offset."
-        ),
+        "offset": "Small positive value added before log transformation.",
     },
     output_descriptions={
         "core_scores": (
