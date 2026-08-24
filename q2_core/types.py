@@ -6,11 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from q2_types.feature_data import FeatureData, ImportanceFormat
-from rachis.plugin import SemanticType, model
+from q2_types.feature_data import FeatureData
+from rachis.plugin import SemanticType
 
 Scores = SemanticType("Scores", variant_of=FeatureData.field["type"])
-
-ScoresDirFmt = model.SingleFileDirectoryFormat(
-    "ScoresDirFmt", "scores.tsv", ImportanceFormat
-)

@@ -6,12 +6,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from q2_types.feature_data import FeatureData
+from q2_types.feature_data import FeatureData, ImportanceDirectoryFormat
 from q2_types.feature_table import FeatureTable, RelativeFrequency
 from rachis.plugin import Bool, Float, Plugin, Range
 
 import q2_core
-from q2_core.types import Scores, ScoresDirFmt
+from q2_core.types import Scores
 
 plugin = Plugin(
     name="core",
@@ -65,6 +65,5 @@ plugin.methods.register_function(
     ),
 )
 
-plugin.register_formats(ScoresDirFmt)
 plugin.register_semantic_types(Scores)
-plugin.register_semantic_type_to_format(FeatureData[Scores], ScoresDirFmt)
+plugin.register_semantic_type_to_format(FeatureData[Scores], ImportanceDirectoryFormat)
