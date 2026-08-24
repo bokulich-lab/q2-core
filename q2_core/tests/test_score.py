@@ -6,18 +6,20 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from unittest import TestCase
-
 import numpy as np
 import pandas as pd
 import pandas.testing as pdt
+from rachis.plugin.testing import TestPluginBase
 
 from q2_core import score
 from q2_core.core_score import _minmax_scale
 
 
-class TestScore(TestCase):
+class TestScore(TestPluginBase):
+    package = "q2_core.tests"
+
     def setUp(self):
+        super().setUp()
         self.table = pd.DataFrame(
             np.array(
                 [

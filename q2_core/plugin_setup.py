@@ -6,11 +6,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from q2_types.feature_data import FeatureData, Importance
+from q2_types.feature_data import FeatureData
 from q2_types.feature_table import FeatureTable, RelativeFrequency
 from rachis.plugin import Bool, Float, Plugin, Range
 
 import q2_core
+from q2_core.types import Scores, ScoresDirFmt
 
 plugin = Plugin(
     name="core",
@@ -32,7 +33,7 @@ plugin.methods.register_function(
         "mean_abundance_on_presence": Bool,
         "offset": Float % Range(0, None, inclusive_start=False),
     },
-    outputs=[("core_scores", FeatureData[Importance])],
+    outputs=[("core_scores", FeatureData[Scores])],
     input_descriptions={"table": "The relative-frequency feature table to score."},
     parameter_descriptions={
         "min_rel_abundance": (
@@ -66,3 +67,7 @@ plugin.methods.register_function(
         "score."
     ),
 )
+
+plugin.register_formats(ScoresDirFmt)
+plugin.register_semantic_types(Scores)
+plugin.register_semantic_type_to_format(FeatureData[Scores], ScoresDirFmt)
