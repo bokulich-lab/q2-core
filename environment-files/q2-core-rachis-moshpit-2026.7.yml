@@ -1,0 +1,9 @@
+channels:
+- https://packages.qiime2.org/qiime2/2026.7/moshpit/released
+- conda-forge
+- bioconda
+dependencies:
+  - rachis-tiny
+  - pip
+  - pip:
+     - q2-core@git+https://github.com/bokulich-lab/q2-core.git@main
