@@ -3,7 +3,7 @@ channels:
 - conda-forge
 - bioconda
 dependencies:
-  - rachis-tiny
+  - rachis-moshpit
   - pip
   - pip:
      - q2-core@git+https://github.com/bokulich-lab/q2-core.git@main
