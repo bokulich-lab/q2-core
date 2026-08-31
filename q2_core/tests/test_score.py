@@ -6,13 +6,18 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import json
+from pathlib import Path
+from unittest.mock import MagicMock, call
+
 import numpy as np
 import pandas as pd
 import pandas.testing as pdt
+from rachis import Artifact, Metadata
 from rachis.plugin.testing import TestPluginBase
 
-from q2_core import score
-from q2_core.core_score import _minmax_scale
+from q2_core import _score, score
+from q2_core.core_score import _minmax_scale, matryoshka_template
 
 
 class TestScore(TestPluginBase):
@@ -31,7 +36,7 @@ class TestScore(TestPluginBase):
         )
 
     def test_score(self):
-        observed = score(self.table)
+        observed = _score(self.table)
 
         index = pd.Index(["O1", "O2", "O3"], name="id")
         expected = pd.DataFrame(
@@ -51,7 +56,7 @@ class TestScore(TestPluginBase):
         pdt.assert_frame_equal(observed, expected)
 
     def test_score_custom_parameters(self):
-        observed = score(self.table, min_rel_abundance=0.01, offset=1e-3)
+        observed = _score(self.table, min_rel_abundance=0.01, offset=1e-3)
 
         index = pd.Index(["O1", "O2", "O3"], name="id")
         expected = pd.DataFrame(
@@ -71,7 +76,7 @@ class TestScore(TestPluginBase):
         pdt.assert_frame_equal(observed, expected)
 
     def test_score_mean_abundance_on_presence(self):
-        observed = score(
+        observed = _score(
             self.table,
             min_rel_abundance=0.01,
             mean_abundance_on_presence=True,
@@ -103,3 +108,81 @@ class TestScore(TestPluginBase):
     def test_minmax_scale_zero_range(self):
         observed = _minmax_scale(pd.Series([2, 2, 2]))
         pdt.assert_series_equal(observed, pd.Series([0.0, 0.0, 0.0]))
+
+    def test_score_pipeline_calls_its_actions(self):
+        core_scores = MagicMock()
+        metadata = MagicMock()
+        core_scores.view.return_value = metadata
+        scatterplot_visualization = MagicMock()
+        table_visualization = MagicMock()
+        score_action = MagicMock(return_value=(core_scores,))
+        scatterplot_action = MagicMock(return_value=(scatterplot_visualization,))
+        tabulate_action = MagicMock(return_value=(table_visualization,))
+        mock_action = MagicMock(
+            side_effect=[score_action, scatterplot_action, tabulate_action]
+        )
+        mock_context = MagicMock(get_action=mock_action)
+
+        score(
+            ctx=mock_context,
+            table=self.table,
+            min_rel_abundance=0.01,
+            mean_abundance_on_presence=True,
+            offset=1e-3,
+        )
+
+        self.assertEqual(
+            mock_context.get_action.call_args_list,
+            [
+                call("core", "_score"),
+                call("vizard", "scatterplot_2d"),
+                call("metadata", "tabulate"),
+            ],
+        )
+        score_action.assert_called_once_with(
+            table=self.table,
+            min_rel_abundance=0.01,
+            mean_abundance_on_presence=True,
+            offset=1e-3,
+        )
+        scatterplot_action.assert_called_once_with(
+            metadata=metadata,
+            x_measure="mean_abundance",
+            y_measure="prevalence",
+            color_by="core_score",
+        )
+        tabulate_action.assert_called_once_with(input=metadata)
+        mock_context.make_report.assert_called_once_with(
+            matryoshka_template,
+            {
+                "Scatterplot": scatterplot_visualization,
+                "Core scores": table_visualization,
+            },
+        )
+
+    def test_score_pipeline_integration(self):
+        table = Artifact.import_data("FeatureTable[RelativeFrequency]", self.table)
+
+        result = self.plugin.pipelines["score"](
+            table=table,
+            min_rel_abundance=0.01,
+            mean_abundance_on_presence=True,
+            offset=1e-3,
+        )
+
+        expected = _score(
+            self.table,
+            min_rel_abundance=0.01,
+            mean_abundance_on_presence=True,
+            offset=1e-3,
+        )
+        observed = result.core_scores.view(Metadata).to_dataframe()
+        pdt.assert_frame_equal(observed, expected)
+        self.assertEqual(repr(result.visualization.type), "Visualization")
+        result.visualization.export_data(self.temp_dir.name)
+        report_dir = Path(self.temp_dir.name)
+        self.assertTrue((report_dir / "index.html").exists())
+        index = json.loads((report_dir / "subfigures" / "index.json").read_text())
+        self.assertEqual(set(index), {"Scatterplot", "Core scores"})
+        self.assertTrue((report_dir / index["Scatterplot"]["index"]).is_file())
+        self.assertTrue((report_dir / index["Core scores"]["index"]).is_file())
