@@ -7,14 +7,17 @@
 # ----------------------------------------------------------------------------
 
 import json
+from importlib.metadata import entry_points
 from pathlib import Path
 from unittest.mock import MagicMock, call
 
 import numpy as np
 import pandas as pd
 import pandas.testing as pdt
-from rachis import Artifact, Metadata
+from qiime2 import Artifact, Metadata
+from qiime2.plugins.core.pipelines import score as score_pipeline
 from rachis.plugin.testing import TestPluginBase
+from rachis.sdk import PluginManager
 
 from q2_core import _score, score
 from q2_core.core_score import _minmax_scale, matryoshka_template
@@ -161,9 +164,13 @@ class TestScore(TestPluginBase):
         )
 
     def test_score_pipeline_integration(self):
+        # TEMPORARY CI DEBUG: remove after resolving metadata registration.
+        print([ep.name for ep in entry_points(group="qiime2.plugins")])
+        print(sorted(PluginManager().plugins))
+
         table = Artifact.import_data("FeatureTable[RelativeFrequency]", self.table)
 
-        result = self.plugin.pipelines["score"](
+        result = score_pipeline(
             table=table,
             min_rel_abundance=0.01,
             mean_abundance_on_presence=True,
