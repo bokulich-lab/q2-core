@@ -8,9 +8,11 @@
 
 import numpy as np
 import pandas as pd
+from q2templates.reports import matryoshka_template
+from rachis import Metadata
 
 
-def score(
+def _score(
     table: pd.DataFrame,
     min_rel_abundance: float = 1e-3,
     mean_abundance_on_presence: bool = False,
@@ -59,6 +61,61 @@ def score(
     )
     result.index.name = "id"
     return result
+
+
+def score(
+    ctx,
+    table,
+    min_rel_abundance=1e-3,
+    mean_abundance_on_presence=False,
+    offset=1e-6,
+):
+    """Compute core scores and visualize their prevalence-abundance relationship.
+
+    Runs the internal core-scoring action, creates a scatterplot of mean
+    abundance against prevalence colored by core score, tabulates the score
+    metadata, and combines both visualizations into a Matryoshka report.
+
+    Args:
+        ctx: Pipeline execution context used to retrieve actions and create
+            reports.
+        table: Relative-frequency feature table to score.
+        min_rel_abundance: Relative-abundance threshold above which a feature
+            is considered present in a sample.
+        mean_abundance_on_presence: Whether to average abundance only across
+            samples in which the feature is present.
+        offset: Small positive value added before log transformation.
+
+    Returns:
+        tuple: The core-score artifact and a visualization report containing
+            the scatterplot and score table.
+    """
+    score_action = ctx.get_action("core", "_score")
+    scatterplot = ctx.get_action("vizard", "scatterplot_2d")
+    tabulate = ctx.get_action("metadata", "tabulate")
+
+    (core_scores,) = score_action(
+        table=table,
+        min_rel_abundance=min_rel_abundance,
+        mean_abundance_on_presence=mean_abundance_on_presence,
+        offset=offset,
+    )
+    metadata = core_scores.view(Metadata)
+    (scatterplot_visualization,) = scatterplot(
+        metadata=metadata,
+        x_measure="mean_abundance",
+        y_measure="prevalence",
+        color_by="core_score",
+    )
+    (table_visualization,) = tabulate(input=metadata)
+    visualization = ctx.make_report(
+        matryoshka_template,
+        {
+            "Scatterplot": scatterplot_visualization,
+            "Core scores": table_visualization,
+        },
+    )
+    return core_scores, visualization
 
 
 def _minmax_scale(x: pd.Series) -> pd.Series:
